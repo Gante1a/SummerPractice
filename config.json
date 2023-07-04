@@ -1,0 +1,10 @@
+{
+  "db_host": "127.0.0.1",
+  "db_user": "root",
+  "db_password": "Dergby-100",
+  "db_database": "telegramm",
+  "bot_token": "6387975292:AAHsEqMiyjILtMjPW0_-2X-7zrZf8O3Zufo",
+  "log_file": "C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Data\\mysql\\general_log.log",
+  "template_message": "Привет! У вас новое сообщение: {{ message }} ",
+  "template_logs": "новый пользователь был зарегистрирован. Его идентификатор чата: {{ chat_id }}, его никнейм: {{ username }}, его ссылка на аккаунт: {{ link }}, дата регистрации: {{ date }}"
+}
