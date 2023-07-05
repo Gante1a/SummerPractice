@@ -25,7 +25,7 @@ class UserTracker:
         cursor.execute(query, values)
 
         if len(cursor.fetchall()) == 0:
-            # Добавление данных в базу данных
+            # Добавление данных в базу
             insert_query = "INSERT INTO telegramm.users (chat_id, first_name, username) VALUES (%s, %s, %s)"
             insert_values = (chat_id, first_name, username)
             cursor.execute(insert_query, insert_values)
