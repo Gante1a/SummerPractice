@@ -7,7 +7,7 @@ class DatabaseConnector:
         with open(config_file, 'r', encoding='utf-8') as file:
             config_data = json.load(file)
 
-        # Получение параметров подключения
+        # Получение параметров подключения к базе
         self.db_host = config_data['db_host']
         self.db_user = config_data['db_user']
         self.db_password = config_data['db_password']
