@@ -16,7 +16,7 @@ class MessageSender:
         self.db_connector = DatabaseConnector()
 
     async def send_message(self):
-        # Запрос ввода данных из консоли
+        # Запрос ввода данных 
         text_id = input('Введите text_id пользователя: ')
         message = input('Введите сообщение для отправки: ')
 
