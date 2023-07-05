@@ -1,49 +1,47 @@
 import json
-import telegram
-from telegram.ext import Updater, MessageHandler, Filters
+import requests
+from jinja2 import Template
 from database import DatabaseConnector
 
-class UserTracker:
+class MessageSender:
     def __init__(self, config_file='config.json'):
-        # Открытие JSON файла
         with open(config_file, 'r', encoding='utf-8') as file:
             config_data = json.load(file)
-
+        
         self.bot_token = config_data['bot_token']
+        self.template = Template(config_data['template_message'])
         self.db_connector = DatabaseConnector()
+        self.send_message()
 
-    def handle_message(self, update: telegram.Update, context):
-        # Получение сообщения из обновления
-        message = update.message
-        chat_id = message.from_user.id
-        first_name = message.from_user.first_name
-        username = message.from_user.username
-        # Проверка наличия chat_id в базе данных
-        cursor = self.db_connector.cursor()
-        query = "SELECT * FROM users WHERE chat_id = %s"
-        values = (chat_id,)
-        cursor.execute(query, values)
+    def send_message(self):
+        text_id = input('Введите text_id пользователя: \n')
+        message = input('Введите сообщение для отправки: \n')
 
-        if len(cursor.fetchall()) == 0:
-            # Добавление данных в базу данных
-            insert_query = "INSERT INTO telegramm.users (chat_id, first_name, username) VALUES (%s, %s, %s)"
-            insert_values = (chat_id, first_name, username)
-            cursor.execute(insert_query, insert_values)
-            self.db_connector.commit()
-            cursor.close()
-            # проверка работоспособности, конечно же в финальной версии будет убрано
-            message.reply_text("Спасибо, ваши данные сохранены!")
-        else:
-            cursor.close()
-            message.reply_text("Ваши данные уже сохранены в базе данных!")
+        sql = f"SELECT chat_id FROM users WHERE chat_id = '{text_id}'"
 
-        # Запуск самой функции
-    def run(self):
-        updater = Updater(token=self.bot_token)
-        updater.dispatcher.add_handler(MessageHandler(Filters.all, self.handle_message))
-        updater.start_polling()
-        updater.idle()
+        connection = self.db_connector.connect()
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+        message_text = self.template.render(message=message)
 
-# Использование класса
-tracker = UserTracker()
-tracker.run()
+        if len(rows) == 0:
+            print('Введённые данные некорректные, повторите ввод')
+            self.send_message()
+            return
+
+        for row in rows:
+            user_chat_id = row[0]
+            send_message_url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
+            payload = {
+                'chat_id': user_chat_id,
+                'text': message_text
+            }
+            response = requests.post(send_message_url, json=payload)
+            if response.status_code == 200:
+                print('Сообщение было успешно отправлено пользователю')
+
+        cursor.close()
+        connection.close()
+
+sender = MessageSender()
