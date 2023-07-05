@@ -17,7 +17,7 @@ class LogReader:
     def read_logs(self):
         with open(self.log_file, 'r', encoding='utf-8') as file:
             content = file.read()
-            # Выбор значений в скобках после каждого VALUES
+            # Выбор значений в скобках после каждого VALUES (определительная черта INSERT)
             pattern = r'(INTO\s+{0}\.users.*?)VALUES \((.*?)\).*\n(.*)'.format(self.target_database)
             matches = re.findall(pattern, content, re.MULTILINE)
 
