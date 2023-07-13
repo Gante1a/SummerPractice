@@ -1,21 +1,59 @@
 import json
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, BigInteger, Boolean
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
-class User(Base):
-    # Данные для таблицы users
-    __tablename__ = 'users'
+class UserMain(Base):
+    # Данные для таблицы users_main
+    __tablename__ = 'users_main'
     with open('config.json', 'r', encoding='utf-8') as file:
         config_data = json.load(file)
         schema_name = config_data['db_database']
 
     __table_args__ = {'schema': schema_name}
-    chat_id = Column(Integer, primary_key=True)
-    first_name = Column(String(255))
-    username = Column(String(255))
+    chat_id = Column(BigInteger, primary_key=True)
+    first_name = Column(String(1000))
+    username = Column(String(1000))
+
+class UserOptional(Base):
+    # Данные для таблицы users_optional
+    __tablename__ = 'users_optional'
+    with open('config.json', 'r', encoding='utf-8') as file:
+        config_data = json.load(file)
+        schema_name = config_data['db_database']
+
+    __table_args__ = {'schema': schema_name}
+    chat_id = Column(BigInteger, primary_key=True)
+    official_name = Column(String(1000))
+    group = Column(String(1000))
+
+class UserMessages(Base):
+    # Данные для таблицы messages
+    __tablename__ = 'messages'
+    with open('config.json', 'r', encoding='utf-8') as file:
+        config_data = json.load(file)
+        schema_name = config_data['db_database']
+
+    __table_args__ = {'schema': schema_name}
+    message_id = Column(Integer, primary_key=True)
+    chat_id = Column(BigInteger)
+    message = Column(String(1000))
+    time = Column(DateTime, nullable=True)  
+    is_sent = Column(Boolean) 
+
+class UserKeys(Base):
+    # Данные для таблицы keys
+    __tablename__ = 'keys'
+    with open('config.json', 'r', encoding='utf-8') as file:
+        config_data = json.load(file)
+        schema_name = config_data['db_database']
+
+    __table_args__ = {'schema': schema_name}
+    key = Column(Integer, primary_key=True)
+    official_name = Column(String(1000))  
+
 
 class DatabaseManager:
     def __init__(self, config_file='config.json'):
