@@ -1,12 +1,15 @@
 import json
-import requests
 from jinja2 import Template
 from datetime import datetime
 from database import DatabaseManager, UserMain, UserMessages
 import time
+import httpx
 
 class MessageSender:
-    def __init__(self, config_file='config.json'):
+    def __init__(self, chat_id, message, config_file='config.json'):
+        self.chat_id = chat_id
+        self.message = message
+
         # Открытие JSON файла
         with open(config_file, 'r', encoding='utf-8') as file:
             config_data = json.load(file)
@@ -14,21 +17,16 @@ class MessageSender:
         self.bot_token = config_data['bot_token']
         self.template = Template(config_data['template_message'])
         self.database = DatabaseManager(config_file=config_file)
-        self.send_message()
 
-    def send_message(self):
-        # Запрос ввода в консоли
-        text_id = input('Введите text_id пользователя: \n')
-        message = input('Введите сообщение для отправки: \n')
+    async def send_message(self):
         # Запрос chat_id по chat_id
-        user = self.database.session.query(UserMain).filter_by(chat_id=text_id).first()
+        user = self.database.session.query(UserMain).filter_by(chat_id=self.chat_id).first()
         if user is None:
             print('Введённые данные некорректные, повторите ввод')
-            self.send_message()
             return
 
         # Применение jinja
-        message_text = self.template.render(message=message)
+        message_text = self.template.render(message=self.message)
         # Запись сообщения в базу данных со статусом is_sent = 0 (не отправлено)
         telegram_server_time = datetime.now()
         telegram_server_time_str = telegram_server_time.strftime('%Y-%m-%d %H:%M:%S.%f')
@@ -37,7 +35,7 @@ class MessageSender:
         self.database.session.commit()
 
         while True:
-            if self.check_internet_connection():
+            if await self.check_internet_connection():
                 # Обновление статуса сообщения в базе данных на 1 (отправлено)
                 new_message.is_sent = True
                 self.database.session.commit()
@@ -47,11 +45,12 @@ class MessageSender:
                     'chat_id': user.chat_id,
                     'text': message_text
                 }
-                response = requests.post(send_message_url, json=payload)
-                if response.status_code == 200:
-                    print('Сообщение было успешно отправлено пользователю')
-                else:
-                    print('Ошибка при отправке сообщения')
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(send_message_url, json=payload)
+                    if response.status_code == 200:
+                        print('Сообщение было успешно отправлено пользователю')
+                    else:
+                        print('Ошибка при отправке сообщения')
                 break
             else:
                 # Проверка подключения к интернету каждые 5 секунд
@@ -61,13 +60,11 @@ class MessageSender:
 
         self.database.close()
 
-    def check_internet_connection(self):
+    async def check_internet_connection(self):
         try:
             # Проверка подключения к интернету
-            response = requests.get("https://web.telegram.org")
-            return response.status_code == 200
+            async with httpx.AsyncClient() as client:
+                response = await client.get("https://web.telegram.org")
+                return response.status_code == 200
         except:
             return False
-
-# Использование класса
-sender = MessageSender()

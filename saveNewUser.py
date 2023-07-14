@@ -1,7 +1,7 @@
 import json
-import requests
 from database import DatabaseManager, UserMain, UserOptional, UserKeys
-from time import sleep
+import httpx
+import asyncio
 
 class UserSaver:
     def __init__(self, config_file='config.json'):
@@ -13,10 +13,7 @@ class UserSaver:
         self.url = f"https://api.telegram.org/bot{self.bot_token}/"
         self.database = DatabaseManager(config_file=config_file)
 
-        # Запуск трекера
-        self.start()
-
-    def handle_message(self, update):
+    async def handle_message(self, update):
         # Данные для таблицы
         message = update['message']
         chat_id = message['from']['id']
@@ -25,10 +22,10 @@ class UserSaver:
         user = self.database.session.query(UserMain).filter_by(chat_id=chat_id).first()
 
         if user is None:
-            self.save_user_data(chat_id, first_name, username)
-            self.reply_text(chat_id, "Спасибо, ваши данные сохранены!")
+            await self.save_user_data(chat_id, first_name, username)
+            await self.reply_text(chat_id, "Спасибо, ваши данные сохранены!")
         else:
-            self.reply_text(chat_id, "Ваши данные уже сохранены в базе данных!")
+            await self.reply_text(chat_id, "Ваши данные уже сохранены в базе данных!")
 
         # Проверка наличия текста сообщения
         if 'text' in message:
@@ -42,13 +39,13 @@ class UserSaver:
                 if user_optional:
                     user_optional.official_name = key.official_name
                     self.database.session.commit()
-                    self.reply_text(chat_id, f"Ваше имя обновлено на: {key.official_name}")
+                    await self.reply_text(chat_id, f"Ваше имя обновлено на: {key.official_name}")
 
                 # Удаление ключа из таблицы
                 self.database.session.delete(key)
                 self.database.session.commit()
 
-    def save_user_data(self, chat_id, first_name, username):
+    async def save_user_data(self, chat_id, first_name, username):
         # Сохранение данных в таблицы users_main и users_optional
         user_main = UserMain(chat_id=chat_id, first_name=first_name, username=username)
         user_optional = UserOptional(chat_id=chat_id, official_name='', group='')
@@ -56,33 +53,39 @@ class UserSaver:
         self.database.session.add(user_optional)
         self.database.session.commit()
 
-    def reply_text(self, chat_id, text):
+    async def reply_text(self, chat_id, text):
         # Отправка сообщения пользователю
         reply_url = f"{self.url}sendMessage"
         payload = {
             'chat_id': chat_id,
             'text': text
         }
-        response = requests.post(reply_url, json=payload)
-        if response.status_code != 200:
-            print('Ошибка при отправке сообщения')
+        async with httpx.AsyncClient() as client:
+            response = await client.post(reply_url, json=payload)
+            if response.status_code != 200:
+                print('Ошибка при отправке сообщения')
 
-    def start(self):
+    async def start(self):
         offset = None
         while True:
             try:
                 updates_url = f"{self.url}getUpdates?offset={offset}"
-                response = requests.get(updates_url)
+                response = httpx.get(updates_url)
                 json_response = response.json()
                 if response.status_code == 200 and json_response['ok']:
                     updates = json_response['result']
                     if updates:
                         for update in updates:
-                            self.handle_message(update)
+                            await self.handle_message(update)
                             offset = update['update_id'] + 1
-            except requests.exceptions.RequestException:
+            except httpx.RequestError:
                 print("Ошибка при подключении к интернету. Ожидание подключения...")
-                sleep(5)
+                await asyncio.sleep(5)
 
-# Использование класса 
-saver = UserSaver()
+def run_user_saver():
+    user_saver = UserSaver()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(user_saver.start())
+
+if __name__ == "__main__":
+    run_user_saver()
