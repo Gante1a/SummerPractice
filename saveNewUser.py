@@ -5,7 +5,7 @@ import asyncio
 
 class UserSaver:
     def __init__(self, config_file='config.json'):
-        # Открытие JSON файла
+        # Открытие JSON файла 
         with open(config_file, 'r', encoding='utf-8') as file:
             config_data = json.load(file)
 
@@ -20,7 +20,6 @@ class UserSaver:
         first_name = message['from']['first_name']
         username = message['from'].get('username')
         user = self.database.session.query(UserMain).filter_by(chat_id=chat_id).first()
-
         if user is None:
             await self.save_user_data(chat_id, first_name, username)
             await self.reply_text(chat_id, "Спасибо, ваши данные сохранены!")
@@ -65,7 +64,7 @@ class UserSaver:
             if response.status_code != 200:
                 print('Ошибка при отправке сообщения')
 
-    async def start(self):
+    async def run(self):
         offset = None
         while True:
             try:
@@ -82,10 +81,6 @@ class UserSaver:
                 print("Ошибка при подключении к интернету. Ожидание подключения...")
                 await asyncio.sleep(5)
 
-def run_user_saver():
-    user_saver = UserSaver()
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(user_saver.start())
-
 if __name__ == "__main__":
-    run_user_saver()
+    user_saver = UserSaver()
+    asyncio.run(user_saver.run())

@@ -6,17 +6,17 @@ import time
 import httpx
 
 class MessageSender:
-    def __init__(self, chat_id, message, config_file='config.json'):
+    def __init__(self, chat_id, message):
         self.chat_id = chat_id
         self.message = message
 
         # Открытие JSON файла
-        with open(config_file, 'r', encoding='utf-8') as file:
+        with open('config.json', 'r', encoding='utf-8') as file:
             config_data = json.load(file)
 
         self.bot_token = config_data['bot_token']
         self.template = Template(config_data['template_message'])
-        self.database = DatabaseManager(config_file=config_file)
+        self.database = DatabaseManager(config_file='config.json')
 
     async def send_message(self):
         # Запрос chat_id по chat_id
@@ -34,37 +34,36 @@ class MessageSender:
         self.database.session.add(new_message)
         self.database.session.commit()
 
+        async def check_internet_connection():
+            try:
+                # Проверка подключения к интернету
+                async with httpx.AsyncClient() as client:
+                    response = await client.get("https://web.telegram.org")
+                    return response.status_code == 200
+            except:
+                return False
+
         while True:
-            if await self.check_internet_connection():
-                # Обновление статуса сообщения в базе данных на 1 (отправлено)
-                new_message.is_sent = True
-                self.database.session.commit()
+            if await check_internet_connection():
                 # Отправка сообщения
                 send_message_url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
-                payload = {
+                data = {
                     'chat_id': user.chat_id,
                     'text': message_text
                 }
                 async with httpx.AsyncClient() as client:
-                    response = await client.post(send_message_url, json=payload)
+                    response = await client.post(send_message_url, json=data)
                     if response.status_code == 200:
                         print('Сообщение было успешно отправлено пользователю')
+                        # Обновление статуса сообщения в базе данных на 1 (отправлено)
+                        new_message.is_sent = True
+                        self.database.session.commit()
                     else:
                         print('Ошибка при отправке сообщения')
                 break
             else:
-                # Проверка подключения к интернету каждые 5 секунд
                 print('Сообщение не было отправлено, проверьте подключение к интернету')
                 print('Ожидание подключения к интернету...')
                 time.sleep(5)
 
         self.database.close()
-
-    async def check_internet_connection(self):
-        try:
-            # Проверка подключения к интернету
-            async with httpx.AsyncClient() as client:
-                response = await client.get("https://web.telegram.org")
-                return response.status_code == 200
-        except:
-            return False

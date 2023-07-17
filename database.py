@@ -51,7 +51,7 @@ class UserKeys(Base):
         schema_name = config_data['db_database']
 
     __table_args__ = {'schema': schema_name}
-    key = Column(Integer, primary_key=True)
+    key = Column(String(1000), primary_key=True)
     official_name = Column(String(1000))  
 
 
