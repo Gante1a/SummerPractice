@@ -21,7 +21,7 @@ USE `telegramm` ;
 -- Table `telegramm`.`keys`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `telegramm`.`keys` (
-  `key` BIGINT NOT NULL,
+  `key` VARCHAR(100) NOT NULL,
   `official_name` VARCHAR(1000) NULL DEFAULT NULL,
   PRIMARY KEY (`key`))
 ENGINE = InnoDB
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS `telegramm`.`messages` (
   `is_sent` TINYINT NULL DEFAULT NULL,
   PRIMARY KEY (`message_id`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 10
+AUTO_INCREMENT = 217
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
