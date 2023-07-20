@@ -67,12 +67,67 @@
             text-decoration: underline;
             color: rgb(17, 17, 18);
         }
+        .delete-button {
+        background-color: #a653bb;
+        color: #ffffff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-left: 175px; 
+    }
     </style>
 
     <script>
         function insertValue(value) {
             document.getElementById('chat_id').value = value;
         }
+        function deleteUser() {
+        const chat_id = document.getElementById('chat_id').value;
+        const confirmation = confirm(`Вы уверены, что хотите удалить пользователя с Chat ID: ${chat_id}?`);
+        if (confirmation) {
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.action = '/delete';
+            
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'chat_id';
+            input.value = chat_id;
+            form.appendChild(input);
+            
+            document.body.appendChild(form);
+            form.submit();
+            }
+        }
+        function deleteKey() {
+            const key = document.getElementById('key').value;
+            if (!key) {
+                alert('Пожалуйста, введите ключ для удаления.');
+                return;
+            }
+
+            const confirmation = confirm(`Вы уверены, что хотите удалить ключ: ${key}?`);
+            if (confirmation) {
+                const form = document.createElement('form');
+                form.method = 'post';
+                form.action = '/delete-key';
+
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'key';
+                input.value = key;
+                form.appendChild(input);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        function insertKey(value) {
+            document.getElementById('key').value = value;
+        }
+
     </script>
 </head>
 <body>
@@ -87,6 +142,7 @@
         <input type="text" id="message" name="message" placeholder="Введите сообщение">
         <br>
         <button type="submit">Отправить</button>
+        <button type="button" class="delete-button" onclick="deleteUser()">Удалить</button>
     </form>
 
     <h1>Создание нового ключа</h1>
@@ -100,7 +156,22 @@
         <input type="text" id="official_name" name="official_name" placeholder="Введите официальное имя">
         <br>
         <button type="submit">Отправить</button>
+        <button type="button" class="delete-button" onclick="deleteKey()">удалить</button>
     </form>
+
+    <h2>Таблица данных keys</h2>
+    <table>
+        <tr>
+            <th>key</th>
+            <th>official_name</th>
+        </tr>
+        {% for row in keys_data %}
+        <tr>
+            <td class="clickable" onclick="insertKey('{{ row[0] }}')">{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 
     <h2>Таблица данных</h2>
     <table>
