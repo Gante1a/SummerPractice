@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #a653bb;
+            color: white;
+        }
+
+        .return-button {
+            background-color: #a653bb;
+            color: #ffffff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .return-button:hover {
+            background-color: #a653bb;
+        }
+    </style>
+</head>
+<body>
+    <form action="/" method="get">
+        <button class="return-button" type="submit">Назад</button>
+    </form>
+    <h1>Таблица отправленных сообщений</h1>
+    <table>
+        <tr>
+            <th>номер сообщения</th>
+            <th>ссылка на пользователя</th>
+            <th>сообщение</th>
+            <th>время отправки</th>
+            <th>статус отправки</th>
+        </tr>
+        {% for row in messages_data %}
+        <tr>
+            <td>{{ row.message_id }}</td>
+            <td>{{ row.chat_id }}</td>
+            <td>{{ row.message }}</td>
+            <td>{{ row.time }}</td>
+            <td>{{ row.is_sent }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

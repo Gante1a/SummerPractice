@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS `telegramm`.`messages` (
   `is_sent` TINYINT NULL DEFAULT NULL,
   PRIMARY KEY (`message_id`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 217
+AUTO_INCREMENT = 231
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
@@ -64,7 +64,6 @@ COLLATE = utf8mb4_0900_ai_ci;
 CREATE TABLE IF NOT EXISTS `telegramm`.`users_optional` (
   `chat_id` BIGINT NOT NULL,
   `official_name` VARCHAR(1000) NULL DEFAULT NULL,
-  `group` VARCHAR(1000) NULL DEFAULT NULL,
   PRIMARY KEY (`chat_id`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4

@@ -36,7 +36,6 @@ class UserOptional(Base):
     
     chat_id = Column(BigInteger, primary_key=True)
     official_name = Column(String(1000))
-    group = Column(String(1000))
 
 class UserMessages(Base):
     '''Данные для таблицы messages'''
@@ -68,11 +67,12 @@ class UserKeys(Base):
     except KeyError:
         raise Exception("Ошибка: Не удалось получить имя схемы таблицы 'keys'")
     
-    key = Column(String(1000), primary_key=True)
+    key = Column(String(100), primary_key=True)
     official_name = Column(String(1000))  
 
 
 class DatabaseManager:
+    '''Соединение с базой данных'''
     def __init__(self, config_file='config.json'):
         try:
             with open(config_file, 'r', encoding='utf-8') as file:

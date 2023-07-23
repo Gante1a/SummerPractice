@@ -1,8 +1,8 @@
-from database import DatabaseManager, UserMain, UserOptional, UserKeys
-from sqlalchemy.exc import SQLAlchemyError
+from database import DatabaseManager, UserMain, UserOptional, UserKeys, UserMessages
+from sqlalchemy.exc import SQLAlchemyError, NoResultFound, IntegrityError
 
 def getUsersInfo():
-    '''Вывод инфориации о пользователях'''
+    '''Вывод информации о пользователях'''
     try:
         db_manager = DatabaseManager()
         session = db_manager.session
@@ -10,22 +10,20 @@ def getUsersInfo():
 
         try:
             user_main_data = session.query(UserMain.chat_id, UserMain.first_name, UserMain.username).all()
-            user_optional_data = session.query(UserOptional.chat_id, UserOptional.official_name, UserOptional.group).all()
+            user_optional_data = session.query(UserOptional.chat_id, UserOptional.official_name).all()
 
             for user_main_row in user_main_data:
                 chat_id = user_main_row.chat_id
                 first_name = user_main_row.first_name
                 username = user_main_row.username
                 official_name = ""
-                group = ""
 
                 for user_optional_row in user_optional_data:
                     if user_optional_row.chat_id == chat_id:
                         official_name = user_optional_row.official_name or ""
-                        group = user_optional_row.group or ""
                         break
 
-                result.append((chat_id, first_name, username, official_name, group))
+                result.append((chat_id, first_name, username, official_name))
 
             return result
 
@@ -43,13 +41,14 @@ def insert_key(key: str, official_name: str):
         new_key = UserKeys(key=key, official_name=official_name)
         session.add(new_key)
         session.commit()
+    except IntegrityError as e:
+        session.rollback()
+        raise Exception("Ошибка базы данных при добавлении ключа: Ключ уже существует. Пожалуйста, измените его название.")
     except SQLAlchemyError as e:
         session.rollback()
         raise Exception(f"Ошибка базы данных при добавлении ключа: {str(e)}")
     finally:
         db_manager.close()
-
-from sqlalchemy.orm.exc import NoResultFound
 
 def delete_user(chat_id):
     '''Удаление пользователя из таблиц users_main и users_optional по chat_id'''
@@ -72,7 +71,7 @@ def delete_user(chat_id):
         db_manager.close()
 
 def getKeysInfo():
-    '''Get information from the keys table'''
+    '''Получение ключей из таблицы'''
     try:
         db_manager = DatabaseManager()
         session = db_manager.session
@@ -91,10 +90,10 @@ def getKeysInfo():
         finally:
             db_manager.close()
     except SQLAlchemyError as e:
-        raise Exception(f"Database error: {str(e)}")  
+        raise Exception(f"Ошибка базы данных: {str(e)}")  
 
 def delete_key(key):
-    '''Delete a key from the keys table'''
+    '''Удаление ключей из таблицы'''
     try:
         db_manager = DatabaseManager()
         session = db_manager.session
@@ -106,7 +105,16 @@ def delete_key(key):
             pass
         except Exception as e:
             session.rollback()
-            raise Exception(f"Database error while deleting key: {str(e)}")
+            raise Exception(f"Ошибка базы данных при удалении ключа: {str(e)}")
     finally:
-        db_manager.close()          
+        db_manager.close()      
 
+def getMessagesInfo():
+    '''Получение всех сообщений из таблицы messages'''
+    try:
+        db_manager = DatabaseManager()
+        session = db_manager.session
+        messages_data = session.query(UserMessages).all()
+        return messages_data
+    except Exception as e:
+        raise Exception(f"Ошибка базы данных: {str(e)}")         

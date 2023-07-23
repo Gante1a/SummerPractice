@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from jinja2 import Template
 import json
 
+''''вывод информации из лог файла'''
 class LogReader:
     def __init__(self, config_file='config.json'):
         try:
