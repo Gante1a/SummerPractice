@@ -5,16 +5,17 @@ import multiprocessing
 import asyncio
 
 async def main():
+    '''Запуск сервера fastapi и асинхронного цикла UserSaver.py одновременно'''
     try:
+        # Запуск серевра fastapi
         os.chdir(r"C:\Python\fastapiprobui")
     except FileNotFoundError:
         raise Exception("Ошибка: Указанная директория не существует или путь некорректен.")
-    '''Запуск сервера fastapi'''
     uvicorn_process = multiprocessing.Process(target=uvicorn.run, args=("main:app",), kwargs={"host": "0.0.0.0", "port": 8000, "reload": True})
     uvicorn_process.start()
 
     try:
-        '''Запуск асинхронного цикла UserSaver.py'''
+        # Запуск асинхронного цикла UserSaver.py
         await UserSaver().run()
     except RuntimeError as e:
         raise Exception(f"Ошибка выполнения асинхронного цикла UserSaver: {str(e)}")
